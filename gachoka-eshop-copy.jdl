@@ -1,0 +1,41 @@
+application {
+  config {
+    baseName notification,
+    applicationType microservice,
+    packageName com.gachokaerick.eshop.notification,
+    serviceDiscoveryType eureka,
+    authenticationType oauth2,
+    prodDatabaseType postgresql,
+    cacheProvider hazelcast,
+    buildTool maven,
+    serverPort 8084
+  }
+  entities Notification
+}
+
+// Notification Ms
+/**
+ * @author Erick Gachoka
+ */
+entity Notification {
+    date Instant required,
+    details String required,
+    sentDate Instant,
+    format NotificationType required
+}
+
+/**
+ * @author Erick Gachoka
+ */
+enum NotificationType {
+    EMAIL, SMS, PARCEL
+}
+
+relationship OneToOne {
+	Notification{user(login) required} to User
+}
+
+service * with serviceClass
+paginate * with pagination
+
+microservice Notification with notification

@@ -1,0 +1,51 @@
+{
+  "name": "Notification",
+  "fields": [
+    {
+      "fieldName": "date",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "details",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "sentDate",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "format",
+      "fieldType": "NotificationType",
+      "fieldValues": "EMAIL,SMS,PARCEL",
+      "fieldTypeJavadoc": "@author Erick Gachoka",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "one-to-one",
+      "otherEntityName": "user",
+      "otherEntityRelationshipName": "notification",
+      "relationshipValidateRules": "required",
+      "relationshipName": "user",
+      "otherEntityField": "login",
+      "ownerSide": true
+    }
+  ],
+  "javadoc": "@author Erick Gachoka",
+  "entityTableName": "notification",
+  "dto": "no",
+  "pagination": "pagination",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["notification"],
+  "microserviceName": "notification",
+  "clientRootFolder": "notification",
+  "databaseType": "sql",
+  "changelogDate": "20211119032204"
+}
