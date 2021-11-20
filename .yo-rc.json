@@ -30,7 +30,7 @@
     "dtoSuffix": "DTO",
     "entitySuffix": "",
     "reactive": false,
-    "applicationIndex": 0,
+    "applicationIndex": 4,
     "entities": ["Notification"],
     "skipServer": false,
     "skipCheckLengthOfIdentifier": false,
@@ -45,6 +45,7 @@
     "nativeLanguage": "en",
     "creationTimestamp": 1637292064348,
     "jwtSecretKey": "YzM0MjgzMDNiMTBlMjgwYTZiM2Y1MTBmN2VkNTlmOWM5NWNmYTVkNTViNmY5OTA4ZTgzMDQxNWZjNzhhYTk1YjEwODU3Y2UyODZiMjRjNWYxZjQ0Mjk3Y2Q5NDNjZmU4YjJmMThmODE0Y2JmZWUwODY4NzQ1OWNmZjMxNDM4MDg=",
-    "lastLiquibaseTimestamp": 1637292124000
+    "lastLiquibaseTimestamp": 1637292124000,
+    "gatewayServerPort": "8080"
   }
 }

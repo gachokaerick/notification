@@ -1,9 +1,8 @@
 package com.gachokaerick.eshop.notification.web.rest;
 
-import com.gachokaerick.eshop.notification.domain.Notification;
 import com.gachokaerick.eshop.notification.repository.NotificationRepository;
-import com.gachokaerick.eshop.notification.repository.UserRepository;
 import com.gachokaerick.eshop.notification.service.NotificationService;
+import com.gachokaerick.eshop.notification.service.dto.NotificationDTO;
 import com.gachokaerick.eshop.notification.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,36 +43,26 @@ public class NotificationResource {
 
     private final NotificationRepository notificationRepository;
 
-    private final UserRepository userRepository;
-
-    public NotificationResource(
-        NotificationService notificationService,
-        NotificationRepository notificationRepository,
-        UserRepository userRepository
-    ) {
+    public NotificationResource(NotificationService notificationService, NotificationRepository notificationRepository) {
         this.notificationService = notificationService;
         this.notificationRepository = notificationRepository;
-        this.userRepository = userRepository;
     }
 
     /**
      * {@code POST  /notifications} : Create a new notification.
      *
-     * @param notification the notification to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new notification, or with status {@code 400 (Bad Request)} if the notification has already an ID.
+     * @param notificationDTO the notificationDTO to create.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new notificationDTO, or with status {@code 400 (Bad Request)} if the notification has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/notifications")
-    public ResponseEntity<Notification> createNotification(@Valid @RequestBody Notification notification) throws URISyntaxException {
-        log.debug("REST request to save Notification : {}", notification);
-        if (notification.getId() != null) {
+    public ResponseEntity<NotificationDTO> createNotification(@Valid @RequestBody NotificationDTO notificationDTO)
+        throws URISyntaxException {
+        log.debug("REST request to save Notification : {}", notificationDTO);
+        if (notificationDTO.getId() != null) {
             throw new BadRequestAlertException("A new notification cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        if (notification.getUser() != null) {
-            // Save user in case it's new and only exists in gateway
-            userRepository.save(notification.getUser());
-        }
-        Notification result = notificationService.save(notification);
+        NotificationDTO result = notificationService.save(notificationDTO);
         return ResponseEntity
             .created(new URI("/api/notifications/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -83,23 +72,23 @@ public class NotificationResource {
     /**
      * {@code PUT  /notifications/:id} : Updates an existing notification.
      *
-     * @param id the id of the notification to save.
-     * @param notification the notification to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated notification,
-     * or with status {@code 400 (Bad Request)} if the notification is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the notification couldn't be updated.
+     * @param id the id of the notificationDTO to save.
+     * @param notificationDTO the notificationDTO to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated notificationDTO,
+     * or with status {@code 400 (Bad Request)} if the notificationDTO is not valid,
+     * or with status {@code 500 (Internal Server Error)} if the notificationDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/notifications/{id}")
-    public ResponseEntity<Notification> updateNotification(
+    public ResponseEntity<NotificationDTO> updateNotification(
         @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody Notification notification
+        @Valid @RequestBody NotificationDTO notificationDTO
     ) throws URISyntaxException {
-        log.debug("REST request to update Notification : {}, {}", id, notification);
-        if (notification.getId() == null) {
+        log.debug("REST request to update Notification : {}, {}", id, notificationDTO);
+        if (notificationDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        if (!Objects.equals(id, notification.getId())) {
+        if (!Objects.equals(id, notificationDTO.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
@@ -107,38 +96,34 @@ public class NotificationResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        if (notification.getUser() != null) {
-            // Save user in case it's new and only exists in gateway
-            userRepository.save(notification.getUser());
-        }
-        Notification result = notificationService.save(notification);
+        NotificationDTO result = notificationService.save(notificationDTO);
         return ResponseEntity
             .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, notification.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, notificationDTO.getId().toString()))
             .body(result);
     }
 
     /**
      * {@code PATCH  /notifications/:id} : Partial updates given fields of an existing notification, field will ignore if it is null
      *
-     * @param id the id of the notification to save.
-     * @param notification the notification to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated notification,
-     * or with status {@code 400 (Bad Request)} if the notification is not valid,
-     * or with status {@code 404 (Not Found)} if the notification is not found,
-     * or with status {@code 500 (Internal Server Error)} if the notification couldn't be updated.
+     * @param id the id of the notificationDTO to save.
+     * @param notificationDTO the notificationDTO to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated notificationDTO,
+     * or with status {@code 400 (Bad Request)} if the notificationDTO is not valid,
+     * or with status {@code 404 (Not Found)} if the notificationDTO is not found,
+     * or with status {@code 500 (Internal Server Error)} if the notificationDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/notifications/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public ResponseEntity<Notification> partialUpdateNotification(
+    public ResponseEntity<NotificationDTO> partialUpdateNotification(
         @PathVariable(value = "id", required = false) final Long id,
-        @NotNull @RequestBody Notification notification
+        @NotNull @RequestBody NotificationDTO notificationDTO
     ) throws URISyntaxException {
-        log.debug("REST request to partial update Notification partially : {}, {}", id, notification);
-        if (notification.getId() == null) {
+        log.debug("REST request to partial update Notification partially : {}, {}", id, notificationDTO);
+        if (notificationDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        if (!Objects.equals(id, notification.getId())) {
+        if (!Objects.equals(id, notificationDTO.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
@@ -146,16 +131,11 @@ public class NotificationResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        if (notification.getUser() != null) {
-            // Save user in case it's new and only exists in gateway
-            userRepository.save(notification.getUser());
-        }
-
-        Optional<Notification> result = notificationService.partialUpdate(notification);
+        Optional<NotificationDTO> result = notificationService.partialUpdate(notificationDTO);
 
         return ResponseUtil.wrapOrNotFound(
             result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, notification.getId().toString())
+            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, notificationDTO.getId().toString())
         );
     }
 
@@ -166,9 +146,9 @@ public class NotificationResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notifications in body.
      */
     @GetMapping("/notifications")
-    public ResponseEntity<List<Notification>> getAllNotifications(Pageable pageable) {
+    public ResponseEntity<List<NotificationDTO>> getAllNotifications(Pageable pageable) {
         log.debug("REST request to get a page of Notifications");
-        Page<Notification> page = notificationService.findAll(pageable);
+        Page<NotificationDTO> page = notificationService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -176,20 +156,20 @@ public class NotificationResource {
     /**
      * {@code GET  /notifications/:id} : get the "id" notification.
      *
-     * @param id the id of the notification to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the notification, or with status {@code 404 (Not Found)}.
+     * @param id the id of the notificationDTO to retrieve.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the notificationDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/notifications/{id}")
-    public ResponseEntity<Notification> getNotification(@PathVariable Long id) {
+    public ResponseEntity<NotificationDTO> getNotification(@PathVariable Long id) {
         log.debug("REST request to get Notification : {}", id);
-        Optional<Notification> notification = notificationService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(notification);
+        Optional<NotificationDTO> notificationDTO = notificationService.findOne(id);
+        return ResponseUtil.wrapOrNotFound(notificationDTO);
     }
 
     /**
      * {@code DELETE  /notifications/:id} : delete the "id" notification.
      *
-     * @param id the id of the notification to delete.
+     * @param id the id of the notificationDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/notifications/{id}")

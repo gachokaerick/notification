@@ -2,6 +2,8 @@ package com.gachokaerick.eshop.notification.service;
 
 import com.gachokaerick.eshop.notification.domain.Notification;
 import com.gachokaerick.eshop.notification.repository.NotificationRepository;
+import com.gachokaerick.eshop.notification.service.dto.NotificationDTO;
+import com.gachokaerick.eshop.notification.service.mapper.NotificationMapper;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,49 +23,44 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    private final NotificationMapper notificationMapper;
+
+    public NotificationService(NotificationRepository notificationRepository, NotificationMapper notificationMapper) {
         this.notificationRepository = notificationRepository;
+        this.notificationMapper = notificationMapper;
     }
 
     /**
      * Save a notification.
      *
-     * @param notification the entity to save.
+     * @param notificationDTO the entity to save.
      * @return the persisted entity.
      */
-    public Notification save(Notification notification) {
-        log.debug("Request to save Notification : {}", notification);
-        return notificationRepository.save(notification);
+    public NotificationDTO save(NotificationDTO notificationDTO) {
+        log.debug("Request to save Notification : {}", notificationDTO);
+        Notification notification = notificationMapper.toEntity(notificationDTO);
+        notification = notificationRepository.save(notification);
+        return notificationMapper.toDto(notification);
     }
 
     /**
      * Partially update a notification.
      *
-     * @param notification the entity to update partially.
+     * @param notificationDTO the entity to update partially.
      * @return the persisted entity.
      */
-    public Optional<Notification> partialUpdate(Notification notification) {
-        log.debug("Request to partially update Notification : {}", notification);
+    public Optional<NotificationDTO> partialUpdate(NotificationDTO notificationDTO) {
+        log.debug("Request to partially update Notification : {}", notificationDTO);
 
         return notificationRepository
-            .findById(notification.getId())
+            .findById(notificationDTO.getId())
             .map(existingNotification -> {
-                if (notification.getDate() != null) {
-                    existingNotification.setDate(notification.getDate());
-                }
-                if (notification.getDetails() != null) {
-                    existingNotification.setDetails(notification.getDetails());
-                }
-                if (notification.getSentDate() != null) {
-                    existingNotification.setSentDate(notification.getSentDate());
-                }
-                if (notification.getFormat() != null) {
-                    existingNotification.setFormat(notification.getFormat());
-                }
+                notificationMapper.partialUpdate(existingNotification, notificationDTO);
 
                 return existingNotification;
             })
-            .map(notificationRepository::save);
+            .map(notificationRepository::save)
+            .map(notificationMapper::toDto);
     }
 
     /**
@@ -73,9 +70,9 @@ public class NotificationService {
      * @return the list of entities.
      */
     @Transactional(readOnly = true)
-    public Page<Notification> findAll(Pageable pageable) {
+    public Page<NotificationDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Notifications");
-        return notificationRepository.findAll(pageable);
+        return notificationRepository.findAll(pageable).map(notificationMapper::toDto);
     }
 
     /**
@@ -85,9 +82,9 @@ public class NotificationService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<Notification> findOne(Long id) {
+    public Optional<NotificationDTO> findOne(Long id) {
         log.debug("Request to get Notification : {}", id);
-        return notificationRepository.findById(id);
+        return notificationRepository.findById(id).map(notificationMapper::toDto);
     }
 
     /**
