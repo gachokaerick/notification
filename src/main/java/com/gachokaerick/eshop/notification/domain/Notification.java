@@ -40,7 +40,7 @@ public class Notification implements Serializable {
     @Column(name = "format", nullable = false)
     private NotificationType format;
 
-    @OneToOne(optional = false)
+    @OneToOne(optional = false, cascade = { CascadeType.PERSIST })
     @NotNull
     @JoinColumn(unique = true)
     private User user;
