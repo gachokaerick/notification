@@ -36,9 +36,9 @@
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
         <run.addResources>false</run.addResources>
         <!-- These remain empty unless the corresponding profile is active -->
-        <profile.no-liquibase/>
-        <profile.api-docs/>
-        <profile.tls/>
+        <profile.no-liquibase />
+        <profile.api-docs />
+        <profile.tls />
 
         <!-- Dependency versions -->
         <jhipster-dependencies.version>7.3.1</jhipster-dependencies.version>
@@ -275,6 +275,15 @@
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5-engine</artifactId>
             <version>${archunit-junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
