@@ -1,10 +1,24 @@
 package com.gachokaerick.eshop.notification.service;
 
+import static com.gachokaerick.eshop.notification.config.Constants.ORDERS_TOPIC;
+import static com.gachokaerick.eshop.notification.config.Constants.RESTOCK_TOPIC;
+
+import com.gachokaerick.eshop.notification.config.KafkaProperties;
 import com.gachokaerick.eshop.notification.domain.Notification;
 import com.gachokaerick.eshop.notification.repository.NotificationRepository;
 import com.gachokaerick.eshop.notification.service.dto.NotificationDTO;
 import com.gachokaerick.eshop.notification.service.mapper.NotificationMapper;
-import java.util.Optional;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.PostConstruct;
+import jdk.dynalink.linker.LinkerServices;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,13 +35,57 @@ public class NotificationService {
 
     private final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
     private final NotificationRepository notificationRepository;
-
     private final NotificationMapper notificationMapper;
+    private final KafkaProperties kafkaProperties;
+    private KafkaConsumer<String, String> kafkaConsumer;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
-    public NotificationService(NotificationRepository notificationRepository, NotificationMapper notificationMapper) {
+    public NotificationService(
+        NotificationRepository notificationRepository,
+        NotificationMapper notificationMapper,
+        KafkaProperties kafkaProperties
+    ) {
         this.notificationRepository = notificationRepository;
         this.notificationMapper = notificationMapper;
+        this.kafkaProperties = kafkaProperties;
+    }
+
+    @PostConstruct
+    public void start() {
+        log.info("Kafka consumer starting...");
+        this.kafkaConsumer = new KafkaConsumer<>(kafkaProperties.getConsumerProps());
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        kafkaConsumer.subscribe(Arrays.asList(RESTOCK_TOPIC, ORDERS_TOPIC));
+        log.info("Kafka consumer started");
+
+        executorService.execute(() -> {
+            try {
+                while (!closed.get()) {
+                    ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(3));
+                    for (ConsumerRecord<String, String> record : records) {
+                        log.info("Consumed message in {} : {}", record.topic(), record.value());
+                    }
+                }
+                kafkaConsumer.commitSync();
+            } catch (WakeupException e) {
+                // Ignore exception if closing
+                if (!closed.get()) throw e;
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            } finally {
+                log.info("Kafka consumer close");
+                kafkaConsumer.close();
+            }
+        });
+    }
+
+    public void shutdown() {
+        log.info("Shutdown Kafka consumer");
+        closed.set(true);
+        kafkaConsumer.wakeup();
     }
 
     /**
